@@ -135,7 +135,7 @@ def fill_playouts(rmem, nnets, epsilon, size, regions):
 
     states = generate_random_initial(args['playouts'])
     paths = [[(None, s)] for s in states]
-    while not step_function(paths, 1.0, nnets.predict_model):
+    while not step_function(paths, epsilon, nnets.predict_model):
         pass
     rmem.store_paths(paths)
 
@@ -171,7 +171,10 @@ if __name__ == "__main__":
     parser.add_argument("--outfile",    required=True, type=str,   help="output file")
     parser.add_argument("--nruns",      required=True, type=int,   help="number of stats runs")
 
-    parser.add_argument("--regions",    required=True, type=bool,  help="region based exploration")
+    parser.add_argument('--regions',    dest='regions', action='store_true')
+    parser.add_argument('--no-regions', dest='regions', action='store_false')
+    parser.set_defaults(regions=True)
+
     parser.add_argument("--lr",         required=True, type=float, help="learning rate")
     parser.add_argument("--rmsize",     required=True, type=int,   help="replay memory size")
     parser.add_argument("--steps",      required=True, type=int,   help="epsilon steps")
@@ -188,5 +191,6 @@ if __name__ == "__main__":
             f.write("# {} = {}\n".format(k,v))
         for n in range(args['nruns']):
             run(f,n, **args)
+            f.flush()
 
 

@@ -22,18 +22,17 @@ class State:
         self.ndiscount : int = 0
         self.reward    : int = 0
             
-            
-    def receive_Move(self, pos:Position):     
+    def validate_Move(self, pos:Position):     
+        if self.status != Status.flying: return False
         if pos.x == self.position.x and pos.y == self.position.y : return False
         if pos.x < 0 or pos.x > 2 : return False
         if pos.y < 0 or pos.y > 2 : return False
         if abs(self.position.x - pos.x) > 1: return False
         if abs(self.position.y - pos.y) > 1: return False
+        return True
 
-        if self.status != Status.flying: 
-            self.reward : int = 0 
-            return        
-        
+    def receive_Move(self, pos:Position):     
+
         adx: int = abs(self.position.x - pos.x)
         ady: int = abs(self.position.y - pos.y)
         
@@ -66,11 +65,16 @@ class State:
             return
         
         self.ndiscount : int = self.ndiscount + 1
+
                 
-    def receive_SetState(self, pos:Position, nmap:Dict[Position,bool], nfuel:int):
+    def validate_SetState(self, pos:Position, nmap:Dict[Position,bool], nfuel:int):
         if nfuel <= 0 or nfuel > 1 : return False
         if pos.x < 0 or pos.x > 2 : return False
         if pos.y < 0 or pos.y > 2 : return False
+        return True
+
+
+    def receive_SetState(self, pos:Position, nmap:Dict[Position,bool], nfuel:int):
         self.fuel : int = nfuel
         self.position : Position = pos
         self.islands : Dict[Position,bool] = nmap

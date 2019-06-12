@@ -16,3 +16,4 @@ echo "Getting IPL from $GETURL"
 curl $GETURL > $1.ipl
 
 echo "Done. Curl command to get regions python:"
+echo "cat regions.json | curl -X PUT -d @- http://localhost:8000/$HASH/ite_regions > regions_tree.py"

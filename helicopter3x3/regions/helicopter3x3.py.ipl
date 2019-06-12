@@ -104,10 +104,3 @@ function validate_SetState(pos:Position,nmap:Position_bool_map,nfuel:int):bool {
   }
   return true
 }
-
-scenario ThreeStep {
-    name "ThreeStep"
-    description ""
-    events[SetState, Move, Move, Move]
-}
-

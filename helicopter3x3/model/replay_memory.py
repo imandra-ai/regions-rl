@@ -39,12 +39,21 @@ class ReplayMemory(object):
         return feeds
     
     def sample(self, size):
+        
         # The index cuts entries after the "done" flag is up
         dones = self.done[:self.maxidx]
         idx_valid = ~dones.cumsum(axis=1).astype(bool) | dones
         max_size = idx_valid.sum()
-        # Cropping the requestied size to size to validvalue
+        
+        # Cropping the requestied size to valid values size
         size = min(size, max_size)
         ix = np.random.uniform(size=max_size)
         ix = np.argsort(ix)[:size]
-        return { k:v[:self.maxidx][idx_valid][ix] for k,v in self.data.items()}       
+        result = { k:v[:self.maxidx][idx_valid][ix] for k,v in self.data.items()}   
+        
+        # Adding next states (returning the same state if "done")
+        next_ix =  ix + (~dones[idx_valid][ix]).astype(int)
+        states = self.data['state'][:self.maxidx][idx_valid]
+        result['next_state'] = states[next_ix] 
+        return result
+     

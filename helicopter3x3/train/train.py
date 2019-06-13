@@ -60,19 +60,20 @@ from model.nn import DoubleDQN, layers
 def log(feeds):
     print("- maps solved {}".format((feeds['reward'] == 1000).sum()))
     avsteps = ((1 - (feeds['done'].cumsum(axis=1) - feeds['done'])).sum(axis=1)).mean()
-    print("- average number of steps steps {}".format(avsteps))
+    print("- average number of steps{}".format(avsteps))
     
                 
 def run_training(**args):
     state_shape = (3,3,2)
     amask_shape = (3,3)
     action_shape = (3,3)
-        
+
+    train_size = args['train_size']
+    nepisodes, max_steps = args['nepisodes'], args['max_steps']
+
     dqn = DoubleDQN(layers, args['lr'])
     rm = ReplayMemory( args['rmsize'], max_steps, state_shape, amask_shape, action_shape)
     
-    train_size = args['train_size']
-    nepisodes, max_steps = args['nepisodes'], args['max_steps']
     discount = args['discount']
     eps_steps, update_every = args['eps_steps'], args['update_every']
     batch_size, epochs = args['batch_size'], args['epochs']
@@ -86,10 +87,10 @@ def run_training(**args):
     for n, epsilon in enumerate(np.linspace(0.95,0.05,eps_steps)):
         
         # Generating playouts
-        print("# Epsilon {}".format(epsilon))
+        print("# Epsilon {:5.03}".format(epsilon), end=' ')
         feeds = rm.get_feeds(nepisodes)
         generate_playouts(nepisodes, max_steps, epsilon, dqn.predict_model, feeds)
-        log(feeds)
+        #log(feeds)
         
         # Sample from RM and train
         sample = rm.sample(train_size)
@@ -97,13 +98,17 @@ def run_training(**args):
         if n != 0 and n % update_every == 0:
             dqn.update_weights()
         
+        # NN evaluation (using exact solution for 3x3)
+        solved = evaluate(dqn.predict_model, max_steps, state_shape, amask_shape)
+        print(" Evaluation {}/{}.".format(solved, 368))
+
         
 import argparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--outfile",    required=True, type=str,   help="output file")
-    parser.add_argument("--nruns",      required=True, type=int,   help="number of stats runs")
+#    parser.add_argument("--outfile",    required=True, type=str,   help="output file")
+#    parser.add_argument("--nruns",      required=True, type=int,   help="number of stats runs")
 
     parser.add_argument('--regions',    dest='regions', action='store_true')
     parser.add_argument('--no-regions', dest='regions', action='store_false')
@@ -120,12 +125,15 @@ if __name__ == "__main__":
     parser.add_argument("--epochs",       required=True, type=int,   help="training epochs")
     parser.add_argument("--batch-size",   required=True, type=int,   help="batch size")
     args = parser.parse_args()
-    
-    with open(args.outfile, "w") as f:
-        args = vars(args)
-        del args['outfile']
-        for k,v in args.items():
-            f.write("# {} = {}\n".format(k,v))
-        for n in range(args['nruns']):
-            run(f,n, **args)
-            f.flush()
+ 
+    args = vars(args)
+    run_training(**args)
+
+    #with open(args.outfile, "w") as f:
+    #    args = vars(args)
+    #    del args['outfile']
+    #    for k,v in args.items():
+    #        f.write("# {} = {}\n".format(k,v))
+    #    for n in range(args['nruns']):
+    #        run(f,n, **args)
+    #        f.flush()

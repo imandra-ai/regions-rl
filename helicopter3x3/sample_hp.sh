@@ -1,0 +1,2 @@
+# Example of good hyperparameters
+python3 -m train.train --lr=0.01 --discount=0.8 --rmsize=1000 --eps-steps=100 --update-every=1 --nepisodes=100 --max-steps=9 --train-size=100 --epochs=20 --batch-size=32
